@@ -15,6 +15,10 @@ class Prolog(object):
                 if '&&' in line or '||' in line:
                     self.parse_formula(line[2:len(line)-1])
                 else: self.parse_question(line[1:])
+            elif line[0] == 'T':
+                self.parse_transitivity(line[1:])
+            elif line[0:6] == 'exists':
+                self.exist_rule(line[6:])
             else:
                 fact = self.parse_line(line)
                 if (',') in fact:
@@ -57,7 +61,7 @@ class Prolog(object):
             part = self.parse_line(part)
             if (',') in part:
                 vec = self.parse_binary(part)
-                verity.append(self.transitive_relation(vec))
+                verity.append(self.is_related(vec))
             else:
                 verity.append(part in self.__graph_dict)
         return verity
@@ -66,11 +70,12 @@ class Prolog(object):
         f_act = self.parse_line(l_ine)
         if (',') in f_act:
             f_act = self.parse_binary(f_act)
-            print(self.transitive_relation(f_act))
+            print(self.is_related(f_act))
         else:
             print(f_act in self.__graph_dict)
 
-    def is_related(self, key, value):
+    def is_related(self, f__):
+        key, value = f__[0], f__[1]
         if key in self.__graph_dict:
             values = self.__graph_dict[key]
             if (value in values):
@@ -80,10 +85,10 @@ class Prolog(object):
             #print("Факта", key, "не существует в системе")
             return(False)
 
-    def transitive_relation(self, f__):
-        key_1, value_1 = f__[0], f__[1]
-        key_2, value_2 = f__[1], f__[0]
-        return (self.is_related(key_1, value_1) or self.is_related(key_2, value_2))
+    # def transitive_relation(self, f__):
+    #     key_1, value_1 = f__[0], f__[1]
+    #     key_2, value_2 = f__[1], f__[0]
+    #     return (self.is_related(key_1, value_1) or self.is_related(key_2, value_2))
 
     def vertices(self):
         """ returns the vertices of a graph """
@@ -121,6 +126,34 @@ class Prolog(object):
             res += str(edge) + " "
         return res
 
+    def exist_rule(self, string):
+        ''' TO DO Добавить проверки '''
+        new_edge_index = string.find('>')
+        new_fact = self.parse_line(string[new_edge_index:])
+        n_fact = self.parse_binary(new_fact)
+        self.add_edge(n_fact)
+        # print('OK')
+
+    def parse_transitivity(self, string_line):
+        first_edge = string_line[1:7]
+        second_edge = string_line[8:14]
+        third_edge = []
+        third_edge.append(string_line[3])
+        third_edge.append(string_line[12])
+
+        new_fact_1 = self.parse_line(first_edge)
+        n_fact_1 = self.parse_binary(new_fact_1)
+        self.add_edge(n_fact_1)
+
+        new_fact_2 = self.parse_line(second_edge)
+        n_fact_2 = self.parse_binary(new_fact_2)
+        self.add_edge(n_fact_2)
+
+        self.add_edge(third_edge)
+
+        # print(first_edge, second_edge, third_edge)
+
+
 
 if __name__ == "__main__":
     g = {}
@@ -130,6 +163,6 @@ if __name__ == "__main__":
 
     # print("Факты")
     # print(graph.vertices())
-
+    #
     # print("Связи")
     # print(graph.edges())
